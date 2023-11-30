@@ -1,0 +1,32 @@
+---
+title: "P8105 Homework 6"
+author: "Laylah Jones"
+date: 2023-12-02
+output: github_document
+---
+
+```{r, include=FALSE}
+library(tidyverse)
+
+
+options(readr.show_col_types = FALSE)
+
+knitr::opts_chunk$set(
+  fig.width = 8,
+  fig.height = 6,
+  out.width = "90%"
+)
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = ("viridis"))
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
+
+# Problem 1
+
+
+
+
