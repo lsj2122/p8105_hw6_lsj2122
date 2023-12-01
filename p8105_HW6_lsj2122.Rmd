@@ -5,8 +5,9 @@ date: 2023-12-02
 output: github_document
 ---
 
-```{r, include=FALSE}
+```{r, include=FALSE, message = FALSE, warning = FALSE}
 library(tidyverse)
+library(ggplot2)
 
 
 options(readr.show_col_types = FALSE)
@@ -28,5 +29,81 @@ scale_fill_discrete = scale_fill_viridis_d
 # Problem 1
 
 
+# Problem 2
+
+### Loading the Data
+
+```{r}
+weather_df = 
+  rnoaa::meteo_pull_monitors(
+    c("USW00094728"),
+    var = c("PRCP", "TMIN", "TMAX"), 
+    date_min = "2022-01-01",
+    date_max = "2022-12-31") |>
+  mutate(
+    name = recode(id, USW00094728 = "CentralPark_NY"),
+    tmin = tmin / 10,
+    tmax = tmax / 10) |>
+  select(name, id, everything())
+```
+
+### Bootstrapping
+
+```{r}
+boot_sample = 
+  function(df) {
+    sample_frac(df, replace = TRUE)
+  }
+
+set.seed(1)
+
+boot_straps = 
+  tibble(strap_number = 1:5000) |> 
+  mutate(
+    strap_sample = map(strap_number, \(i) boot_sample(weather_df))
+  )
+```
+
+### 'lm' fit
+
+```{r}
+boot_results = 
+  boot_straps |> 
+  mutate(
+    models = map(strap_sample, \(df) lm(tmax ~ tmin + prcp, data = df)),
+    tidy_results = map(models, broom::tidy),
+    glance_results = map(models, broom::glance)
+  ) |> 
+  select(strap_number, tidy_results, glance_results) |> 
+  unnest(tidy_results, glance_results)
+```
+
+```{r}
+logb1b2_results = boot_results |> 
+  select(strap_number, term, estimate, std.error) |> 
+  filter(term %in% c("tmin", "prcp")) |> 
+  pivot_wider(
+    names_from = term, 
+    values_from = c(estimate, std.error)
+  ) |> 
+  mutate(
+    logb1b2 = log(estimate_tmin * estimate_prcp)
+  )
+
+rsq_results = boot_results |> 
+  select(strap_number, r.squared) |> 
+  distinct(.keep_all = TRUE)
+```
+
+### Plotting Distribution of Estimates
+
+```{r}
+logb1b2_results |> 
+  ggplot(aes(y = logb1b2)) + 
+  geom_boxplot() +
+  labs(
+    title = "Estimation of R Squared"
+  )
+```
 
 
