@@ -33,7 +33,7 @@ scale_fill_discrete = scale_fill_viridis_d
 
 ### Loading the Data
 
-```{r}
+```{r, load}
 weather_df = 
   rnoaa::meteo_pull_monitors(
     c("USW00094728"),
@@ -47,63 +47,70 @@ weather_df =
   select(name, id, everything())
 ```
 
-### Bootstrapping
+### Creating the DF with Estimates
 
-```{r}
-boot_sample = 
-  function(df) {
-    sample_frac(df, replace = TRUE)
-  }
-
-set.seed(1)
-
-boot_straps = 
-  tibble(strap_number = 1:5000) |> 
+```{r, estimates}
+weather_data = 
+  weather_df |> 
+  modelr::bootstrap(n = 5000) |> 
   mutate(
-    strap_sample = map(strap_number, \(i) boot_sample(weather_df))
-  )
-```
-
-### 'lm' fit
-
-```{r}
-boot_results = 
-  boot_straps |> 
-  mutate(
-    models = map(strap_sample, \(df) lm(tmax ~ tmin + prcp, data = df)),
-    tidy_results = map(models, broom::tidy),
-    glance_results = map(models, broom::glance)
-  ) |> 
-  select(strap_number, tidy_results, glance_results) |> 
-  unnest(tidy_results, glance_results)
-```
-
-```{r}
-logb1b2_results = boot_results |> 
-  select(strap_number, term, estimate, std.error) |> 
-  filter(term %in% c("tmin", "prcp")) |> 
+    models = map(strap, \(df) lm(tmax ~ tmin + prcp, data = df)),
+    r2 = map(models, broom::glance),
+    results = map(models, broom::tidy)) |>
+  select(.id,results,r2) |> 
+  unnest(r2, results) |>
+  select(.id, r.squared, term, estimate) |>
   pivot_wider(
-    names_from = term, 
-    values_from = c(estimate, std.error)
-  ) |> 
+    names_from = term,
+    values_from = estimate
+  ) |>
   mutate(
-    logb1b2 = log(estimate_tmin * estimate_prcp)
-  )
-
-rsq_results = boot_results |> 
-  select(strap_number, r.squared) |> 
-  distinct(.keep_all = TRUE)
+    log_b1_b2 = log(tmin * prcp)
+  ) |>
+  select(.id, r.squared, log_b1_b2)
 ```
 
 ### Plotting Distribution of Estimates
 
-```{r}
-logb1b2_results |> 
-  ggplot(aes(y = logb1b2)) + 
-  geom_boxplot() +
+```{r, plot}
+weather_data |>
+  ggplot(aes(x = r.squared)) +
+  geom_density() +
   labs(
     title = "Estimation of R Squared"
   )
 ```
 
+The distribution of ${r^2}$ is normal, with it being centered around 0.920.
 
+```{r, plot2}
+weather_data |>
+  ggplot(aes(x = log_b1_b2)) +
+  geom_density() + 
+  labs(
+    title = "Estimation of log(b1b2)"
+  )
+```
+
+The distribution of log($\hat{beta_1} * \hat{beta_2}$) is left-skewed. There are `r sum(is.na(pull(weather_data, log_b1_b2)))/nrow(weather_data)*100` NA values, due to negative precipitation values, and we can see this distribution after we remove the NA values.
+
+### 95% CI for log(b1*b2)
+
+```{r, CI}
+quantile(
+  pull(weather_data, log_b1_b2),
+  probs = c(0.025, 0.975), 
+  na.rm = TRUE
+) |> 
+  knitr::kable()
+```
+
+### 95% CI for R-Squared
+
+```{r, CI_R}
+quantile(
+  pull(weather_data, r.squared),
+  probs = c(0.025, 0.975)
+) |> 
+  knitr::kable()
+```
