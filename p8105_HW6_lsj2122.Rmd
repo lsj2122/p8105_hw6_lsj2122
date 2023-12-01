@@ -81,7 +81,7 @@ weather_data |>
   )
 ```
 
-The distribution of ${r^2}$ is normal, with it being centered around 0.920.
+The distribution of ${r^2}$ is normal, with it being centered around 0.920. It shows a visibly heavy tail extending to low values, and a bump which could be attributed to the occurance of large outliers withing the bootstrap samples.
 
 ```{r, plot2}
 weather_data |>
@@ -92,7 +92,8 @@ weather_data |>
   )
 ```
 
-The distribution of log($\hat{beta_1} * \hat{beta_2}$) is left-skewed. There are `r sum(is.na(pull(weather_data, log_b1_b2)))/nrow(weather_data)*100` NA values, due to negative precipitation values, and we can see this distribution after we remove the NA values.
+The distribution of log($\hat{beta_1} * \hat{beta_2}$) is uni-modal and left-skewed. There are `r sum(is.na(pull(weather_data, log_b1_b2)))/nrow(weather_data)*100` NA values, due to negative precipitation values, and we can see this distribution after we remove the NA values. The distribution shows an even more visibly heavy tail extending to the low values, with majority of the values clustering on the right side.
+
 
 ### 95% CI for log(b1*b2)
 
@@ -105,6 +106,8 @@ quantile(
   knitr::kable()
 ```
 
+This is the 95% confidence interval for log($\hat{beta_1} * \hat{beta_2}$) after removing the NA values.
+
 ### 95% CI for R-Squared
 
 ```{r, CI_R}
@@ -114,3 +117,13 @@ quantile(
 ) |> 
   knitr::kable()
 ```
+
+
+# Problem 3
+
+### Loading the data
+
+```{r}
+
+```
+
