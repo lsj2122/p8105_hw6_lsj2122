@@ -47,12 +47,12 @@ weather_df =
   select(name, id, everything())
 ```
 
-### Creating the DF with Estimates
+### Creating Bootstrap and Getting Estimates
 
 ```{r, estimates}
 weather_data = 
   weather_df |> 
-  modelr::bootstrap(n = 5000) |> 
+  modelr::bootstrap(n = 50) |> 
   mutate(
     models = map(strap, \(df) lm(tmax ~ tmin + prcp, data = df)),
     r2 = map(models, broom::glance),
@@ -77,11 +77,13 @@ weather_data |>
   ggplot(aes(x = r.squared)) +
   geom_density() +
   labs(
-    title = "Estimation of R Squared"
+    title = "Estimation of R Squared",
+    x = "R Squared Estimate",
+    y = "Count"
   )
 ```
 
-The distribution of ${r^2}$ is normal, with it being centered around 0.920. It shows a visibly heavy tail extending to low values, and a bump which could be attributed to the occurance of large outliers withing the bootstrap samples.
+The distribution of ${r^2}$ is normal, with it being centered around 0.920. It shows a visibly heavy tail extending to low values, and a bump which could be attributed to the occurrence of large outliers withing the bootstrap samples.
 
 ```{r, plot2}
 weather_data |>
@@ -124,6 +126,8 @@ quantile(
 ### Loading the data
 
 ```{r}
-
+birthweight_df = 
+  read_csv("data/birthweight.csv") |> 
+  janitor::clean_names() 
 ```
 
