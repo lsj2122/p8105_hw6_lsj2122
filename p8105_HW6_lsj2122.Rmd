@@ -28,9 +28,6 @@ scale_colour_discrete = scale_colour_viridis_d
 scale_fill_discrete = scale_fill_viridis_d
 ```
 
-# Problem 1
-
-
 # Problem 2
 
 ### Loading the Data
@@ -51,13 +48,13 @@ weather_df =
 
 ### Creating Bootstrap and Getting Estimates
 
-```{r}
+```{r, boot}
 boot_sample = function(df) {
   sample_frac(df, replace = TRUE)
 }
 ```
 
-```{r}
+```{r, strap}
 set.seed(1)
 
 boot_strap = 
@@ -114,7 +111,7 @@ rsq_results |>
 
 The distribution of ${r^2}$ is normal, with it being centered around 0.920. It shows a visibly heavy tail extending to low values, and a bump which could be attributed to the occurrence of large outliers withing the bootstrap samples.
 
-The distribution of log($\hat{beta_1} * \hat{beta_2}$) is uni-modal and left-skewed. Due to negative precipitation values, and we can see this distribution after we remove the NA values. The distribution shows an even more visibly heavy tail extending to the low values, with majority of the values clustering on the right side.
+The distribution of log($\hat{beta_1} * \hat{beta_2}$) is normal and left-skewed. Due to negative precipitation values, and we can see this distribution after we remove the NA values. The distribution shows an even more visibly heavy tail extending to the low values, with majority of the values clustering on the right side.
 
 ### 95% CI for log(b1*b2)
 
@@ -138,6 +135,7 @@ rsq_results |>
   knitr::kable()
 ```
 
+This is the 95% confidence interval for R Squared.
 
 # Problem 3
 
@@ -162,6 +160,8 @@ head(birthweight_df)
 
 purrr::map(birthweight_df, ~sum(is.na(.)))
 ```
+
+Using the `purrr::map(birthweight_df, ~sum(is.na(.))), we found that there is no missing data. 
 
 ### Making the Regression Model
 
@@ -190,6 +190,8 @@ birthweight_df |>
 
 birthweight_plot
 ```
+
+I used this code above to create a plot of the model residuals fitted against values from the proposed model.
 
 ### Cross Validation
 
@@ -239,3 +241,4 @@ cross_validation_plot =
 cross_validation_plot
 ```
 
+From the plot above, we can see that Model 2, which consists of head circumference, length, sex, and all interactions, had the lowest RMSE out of all the models including the proposed model. Model 1, which consists of length and gestational age, has an RMSE that is greater than the one seen in Model 2, but less than that of the proposed model. From this it can be indicated that the proposed model is the most suitable model compared to all the other models.
